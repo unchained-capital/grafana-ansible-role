@@ -1,8 +1,15 @@
 ---
 
-grafana_version:          2.6.0
-grafana_release_basename: "grafana_{{ grafana_version }}_amd64.deb"
+grafana_version:          3.0.4      # latest as of 2016-07-04
+grafana_release_id:       1464167696 # latest as of 2016-07-04
+grafana_release_basename: "grafana_{{ grafana_version }}-{{ grafana_release_id }}_amd64.deb"
 grafana_release_url:      "https://grafanarel.s3.amazonaws.com/builds/{{ grafana_release_basename }}"
+
+#
+# User & Group
+#
+grafana_user:  grafana
+grafana_group: grafana
 
 #
 # Grafana Configuration
