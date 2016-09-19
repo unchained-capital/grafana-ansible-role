@@ -1,10 +1,12 @@
-##################### Grafana Configuration Example #####################
-#
-# Everything has defaults so you only need to uncomment things you want to
-# change
+# {{ ansible_managed }}
+
+##################### Grafana Configuration #####################
 
 # possible values : production, development
 app_mode = {{ grafana_app_mode }}
+
+# instance name, defaults to HOSTNAME environment variable value or hostname if HOSTNAME var is empty
+instance_name = {{ grafana_instance_name }}
 
 #################################### Paths ####################################
 [paths]
@@ -15,6 +17,10 @@ data = {{ grafana_data_dir }}
 # Directory where grafana can store logs
 #
 logs = {{ grafana_log_dir }}
+#
+# Directory where grafana will automatically scan and look for plugins
+#
+plugins = {{ grafana_plugins_dir }}
 
 #################################### Server ####################################
 [server]
@@ -47,14 +53,16 @@ router_logging = {{ grafana_router_logging | lower }}
 enable_gzip = {{ grafana_enable_gzip | lower }}
 
 # https certs & key file
-{% if grafana_cert_file %};cert_file ={{ grafana_cert_file }}{% endif %}
-{% if grafana_cert_key  %};cert_key ={{ grafana_cert_key }}{% endif %}
+{% if grafana_cert_file %}cert_file ={{ grafana_cert_file }}{% endif %}
+
+{% if grafana_cert_key  %}cert_key ={{ grafana_cert_key }}{% endif %}
 
 #################################### Database ####################################
 [database]
 # Either "mysql", "postgres" or "sqlite3", it's your choice
 type = {{ grafana_database_type }}
 {% if grafana_database_host %}host = {{ grafana_database_host }}{% endif %}
+
 name = {{ grafana_database_name }}
 user = {{ grafana_database_user }}
 password = {{ grafana_database_password }}
@@ -120,6 +128,13 @@ disable_gravatar = {{ grafana_disable_gravatar | lower }}
 # data source proxy whitelist (ip_or_domain:port seperated by spaces)
 ;data_source_proxy_whitelist =
 
+[snapshots]
+# snapshot sharing options
+external_enabled = {{ grafana_snapshot_external_enabled | lower }}
+;external_snapshot_url = https://snapshots-origin.raintank.io
+;external_snapshot_name = Publish to snapshot.raintank.io
+
+
 #################################### Users ####################################
 [users]
 # disable user signup / registration
@@ -137,16 +152,19 @@ auto_assign_org = {{ grafana_auto_assign_org | lower }}
 # Background text for the user field on the login page
 login_hint = {{ grafana_login_hint }}
 
+# Default UI theme ("dark" or "light")
+default_theme = {{ grafana_default_theme }}
+
 #################################### Anonymous Auth ##########################
 [auth.anonymous]
 # enable anonymous access
-enabled = {{ grafana_anonymous_enabled | lower }}
+enabled = {{ grafana_auth_anonymous_enabled | lower }}
 
 # specify organization name that should be used for unauthenticated users
-org_name = "{{ grafana_org_name }}"
+org_name = "{{ grafana_anonymous_org_name }}"
 
 # specify role for unauthenticated users
-;org_role = Viewer
+org_role = {{ grafana_anonymous_org_role }}
 
 #################################### Github Auth ##########################
 [auth.github]
@@ -182,12 +200,12 @@ org_name = "{{ grafana_org_name }}"
 
 #################################### Basic Auth ##########################
 [auth.basic]
-;enabled = true
+enabled = {{ grafana_auth_basic_enabled | lower }}
 
 #################################### Auth LDAP ##########################
 [auth.ldap]
-;enabled = false
-;config_file = /etc/grafana/ldap.toml
+enabled = {{ grafana_auth_ldap_enabled | lower }}
+config_file = {{ grafana_conf_dir }}/ldap.toml
 
 #################################### SMTP / Emailing ##########################
 [smtp]
@@ -205,15 +223,15 @@ org_name = "{{ grafana_org_name }}"
 
 #################################### Logging ##########################
 [log]
-# Either "console", "file", default is "console"
-# Use comma to separate multiple modes, e.g. "console, file"
-mode = {{ grafana_logging_mode }}
+# Either "console", "file", "syslog". Default is console and  file
+# Use space to separate multiple modes, e.g. "console file"
+mode = {{ grafana_log_mode }}
 
 # Buffer length of channel, keep it as it is if you don't know what it is.
 ;buffer_len = 10000
 
 # Either "Trace", "Debug", "Info", "Warn", "Error", "Critical", default is "Trace"
-;level = Info
+level = {{ grafana_log_level }}
 
 # For "console" mode only
 [log.console]
@@ -237,6 +255,22 @@ mode = {{ grafana_logging_mode }}
 # Expired days of log file(delete after max days), default is 7
 ;max_days = 7
 
+[log.syslog]
+;level =
+
+# log line format, valid options are text, console and json
+;format = text
+
+# Syslog network type and address. This can be udp, tcp, or unix. If left blank, the default unix endpoints will be used.
+;network =
+;address =
+
+# Syslog facility. user, daemon and local0 through local7 are valid.
+;facility =
+
+# Syslog tag. By default, the process' argv[0] is used.
+;tag =
+
 #################################### AMPQ Event Publisher ##########################
 [event_publisher]
 ;enabled = false
@@ -247,3 +281,52 @@ mode = {{ grafana_logging_mode }}
 [dashboards.json]
 ;enabled = false
 ;path = /var/lib/grafana/dashboards
+
+#################################### Usage Quotas ##########################
+[quota]
+;enabled = false
+
+#### set quotas to -1 to make unlimited. ####
+# limit number of users per Org.
+;org_user = 10
+
+# limit number of dashboards per Org.
+;org_dashboard = 100
+
+# limit number of data_sources per Org.
+;org_data_source = 10
+
+# limit number of api_keys per Org.
+;org_api_key = 10
+
+# limit number of orgs a user can create.
+;user_org = 10
+
+# Global limit of users.
+;global_user = -1
+
+# global limit of orgs.
+;global_org = -1
+
+# global limit of dashboards
+;global_dashboard = -1
+
+# global limit of api_keys
+;global_api_key = -1
+
+# global limit on number of logged in users.
+;global_session = -1
+
+#################################### Internal Grafana Metrics ##########################
+# Metrics available at HTTP API Url /api/metrics
+[metrics]
+enabled           = {{ grafana_metrics_enabled | lower }}
+interval_seconds  = {{ grafana_metrics_interval }}
+
+# Send internal Grafana metrics to graphite
+; [metrics.graphite]
+; address = localhost:2003
+; prefix = prod.grafana.%(instance_name)s.
+
+[grafana_net]
+;url = https://grafana.net

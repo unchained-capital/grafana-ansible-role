@@ -1,25 +1,27 @@
 ---
 
-- name: Download Grafana package
+- name: Ensure Grafana package is downloaded
   when: ansible_os_family == "Debian"
   get_url: url="{{ grafana_release_url}}" dest="/usr/local/src/{{ grafana_release_basename }}" owner=root group=root mode=0644
-  tags:
-    - grafana
+  tags: [grafana]
 
-- name: Install Grafana package
+- name: Ensure Grafana package is installed
   when: ansible_os_family == "Debian"
   apt: deb="/usr/local/src/{{ grafana_release_basename }}" state=present
-  tags:
-    - grafana
+  notify: restart grafana
+  tags: [grafana]
 
-- name: Create Grafana configuration file
+- name: Ensure Grafana configuration file is correct
   template: src=grafana.ini.j2 dest="{{grafana_conf_dir}}/grafana.ini" owner=root group=grafana mode=0640
-  notify:
-    - restart grafana
-  tags:
-    - grafana
+  notify: restart grafana
+  tags: [grafana]
 
-- name: Start Grafana service
-  service: name=grafana-server state={{grafana_state}} enabled={{ grafana_enabled }}
-  tags:
-    - grafana
+- name: Ensure Grafana LDAP configuration file is correct
+  when: grafana_auth_ldap_enabled
+  template: src=ldap.toml.j2 dest="{{grafana_conf_dir}}/ldap.toml" owner=root group=grafana mode=0640
+  notify: restart grafana
+  tags: [grafana, ldap]
+
+- name: Ensure Grafana service is running and enabled
+  service: name=grafana-server state=started enabled=yes
+  tags: [grafana]

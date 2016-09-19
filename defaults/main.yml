@@ -1,7 +1,11 @@
 ---
 
-grafana_version:          3.0.4      # latest as of 2016-07-04
-grafana_release_id:       1464167696 # latest as of 2016-07-04
+#
+# Installation
+#
+
+grafana_version:          3.1.1      # latest as of 2016-09-18
+grafana_release_id:       1470047149 # latest as of 2016-09-18
 grafana_release_basename: "grafana_{{ grafana_version }}-{{ grafana_release_id }}_amd64.deb"
 grafana_release_url:      "https://grafanarel.s3.amazonaws.com/builds/{{ grafana_release_basename }}"
 
@@ -16,15 +20,15 @@ grafana_group: grafana
 #
 
 grafana_app_mode: production
-grafana_state: started
-grafana_enabled: yes
+grafana_instance_name: '${HOSTNAME}'
 
 #
 # Paths
 #
-grafana_conf_dir: /etc/grafana
-grafana_data_dir: /var/lib/grafana
-grafana_log_dir: /var/log/grafana
+grafana_conf_dir:    /etc/grafana
+grafana_data_dir:    /var/lib/grafana
+grafana_log_dir:     /var/log/grafana
+grafana_plugins_dir: /var/lib/grafana/plugins
 
 #
 # Server
@@ -68,6 +72,8 @@ grafana_cookie_username: grafana_user
 grafana_cookie_remember_name: grafana_remember
 grafana_disable_gravatar: false
 
+grafana_snapshot_external_enabled: true
+
 #
 # Users
 #
@@ -75,14 +81,56 @@ grafana_allow_sign_up: true
 grafana_allow_org_create: true
 grafana_auto_assign_org: true
 grafana_login_hint: "email or username"
+grafana_default_theme: dark
 
 #
 # Auth: Anonymous
 #
-grafana_anonymous_enabled: false
-grafana_org_name: "Main Org."
+grafana_auth_anonymous_enabled: false
+grafana_anonymous_org_name: "Main Org."
+grafana_anonymous_org_role: Viewer
+
+#
+# Auth: Basic
+#
+grafana_auth_basic_enabled: true
+
+#
+# Auth: LDAP
+#
+grafana_auth_ldap_enabled: false
+grafana_ldap_verbose_logging: false
+grafana_ldap_hosts: "localhost"
+grafana_ldap_ssl: false
+grafana_ldap_ssl_skip_verify: false
+grafana_ldap_port: "{% if grafana_ldap_ssl %}{{ 636 }}{% else %}{{ 389 }}{% endif %}"
+grafana_ldap_bind_dn: "cn=admin,dc=example,dc=com"
+grafana_ldap_bind_pw: "password"
+grafana_ldap_search_filter: "(cn=%s)"
+grafana_ldap_base_dns: ["dc=example,dc=com"]
+grafana_ldap_group_search_filter: ~ # e.g. - (&(objectClass=posixGroup)(memberUid=%s))
+grafana_ldap_group_base_dns: ~  # e.g. - ou=groups,dc=grafana,dc=org
+grafana_ldap_given_name_attr: givenName
+grafana_ldap_surname_attr:    sn
+grafana_ldap_username_attr:   cn
+grafana_ldap_member_of_attr:  memberOf
+grafana_ldap_email_attr:      mail
+grafana_ldap_group_mappings:
+  - ldap:    "cn=admins,dc=example,dc=com"
+    grafana: "Admin"
+  - ldap:    "cn=users,dc=example,dc=com"
+    grafana: "Editor"
+  - ldap:    "*"
+    grafana: "Viewer"
 
 #
 # Logging
 #
-grafana_logging_mode: file
+grafana_log_mode: file
+grafana_log_level: Info
+
+#
+# Metrics
+#
+grafana_metrics_enabled:  true
+grafana_metrics_interval: 60
