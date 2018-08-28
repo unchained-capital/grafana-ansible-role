@@ -4,10 +4,9 @@
 # Installation
 #
 
-grafana_version:          4.0.2      # latest as of 2016-12-22
-grafana_release_id:       1481203731 # latest as of 2016-12-22
-grafana_release_basename: "grafana_{{ grafana_version }}-{{ grafana_release_id }}_amd64.deb"
-grafana_release_url:      "https://grafanarel.s3.amazonaws.com/builds/{{ grafana_release_basename }}"
+grafana_version:          5.2.2      # latest as of 2018-08-28
+grafana_release_basename: "grafana_{{ grafana_version }}_amd64.deb"
+grafana_release_url:      "https://s3-us-west-2.amazonaws.com/grafana-releases/release/{{ grafana_release_basename }}"
 
 #
 # User & Group
